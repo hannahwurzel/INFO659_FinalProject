@@ -1,0 +1,92 @@
+---
+title: "Final Project"
+output:
+  html_document:
+    df_print: paged
+---
+
+OVERALL QUESTION I AM TRYING TO ANSWER: Does age have an impact on WHERE people shop (ie. online, in store, through a catalog)
+
+Necessary Imports
+```{r}
+library(ggplot2)
+library(e1071)
+library(dplyr)
+```
+
+First I am reading in the CSV file.
+```{r}
+data <- read.csv("~/Desktop/INFO_659/final_project/marketing_campaign.csv")
+head(data)
+```
+
+Now I am checking the data for null values.
+```{r}
+is.null(data)
+```
+Now that we know the data doesn't contain any nulls, we can move forward.
+
+
+First I will be creating an 'age' variable which takes the year a customer was born and subtracts that from 2021 to get the customers age.
+```{r}
+data$age <- 2021 - data['Year_Birth']
+data$age <- as.numeric(unlist(data$age))
+```
+
+Now I will create a histogram of the age data to get a better understanding of the customers on this data set.
+```{r}
+hist(data$age)
+``` 
+As you can see, this histogram seems pretty normally distributed.  To accurately use this data I will be turning the age variable into a categorical one by seperating each age into four different categories: 20-35, 36-50, 51-65, and 66+.
+
+```{r}
+data <- within(data, {   
+  ageCat <- NA # need to initialize variable
+  ageCat[age < 35] <- "20-35"
+  ageCat[age >= 35 & age < 50] <- "35-49"
+  ageCat[age >= 50 & age < 65] <- "50-64"
+  ageCat[age >= 65] <- "65+"
+   } )
+
+head(data$ageCat)
+```
+
+Next, I am looking at the frequency of where each age group tends to make their purchases.
+```{r}
+xtabs(~ageCat+NumWebPurchases, data = data)
+xtabs(~ageCat+NumCatalogPurchases, data = data)
+xtabs(~ageCat+NumStorePurchases, data = data)
+```
+
+Now I am graphing each of these variables against age to visually see what is going on.
+
+```{r}
+data %>%
+  ggplot(aes(x=ageCat, y=NumWebPurchases, fill = ageCat)) +
+  geom_boxplot() +theme_bw()+
+  ggtitle("Box Plot")
+```
+```{r}
+data %>%
+         ggplot(aes(x=ageCat, y=NumCatalogPurchases, fill = ageCat)) +
+         geom_boxplot() +theme_bw()+
+         ggtitle("Box Plot")
+```
+
+```{r}
+data %>%
+         ggplot(aes(x=ageCat, y=NumStorePurchases, fill = ageCat)) +
+         geom_boxplot() +theme_bw()+
+         ggtitle("Box Plot")
+```
+It seems as though each age group is pretty similar in their spending ways.
+
+
+Now, I will be conducting naive bayes on NumWebPurchases, NumCatalogPurchases and NumStorePurchases.
+```{r}
+#model <- naiveBayes(ageCat ~ NumWebPurchases + NumCatalogPurchases + NumStorePurchases, data = train, usekernel = T, laplace = 1.5) 
+#model
+```
+As you can see, none of these are statistically significant.  Thus, you cannot assume where someone may make a purchase simply by using their age. 
+
+
